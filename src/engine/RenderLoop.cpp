@@ -1,5 +1,8 @@
 #include "engine/RenderLoop.h"
+#include <DirectXMath.h>
 #include <cmath>
+
+using namespace DirectX;
 
 namespace engine {
 
@@ -24,12 +27,15 @@ static void hsvToRgb(float h, float s, float v, float out[3])
 void RenderLoop::init(HWND hwnd, UINT width, UINT height)
 {
     m_device.init(hwnd, width, height);
+    updateCamera(); // seed camera at t=0 before first frame
 }
 
 void RenderLoop::tick(float dt)
 {
-    m_hue = std::fmod(m_hue + dt * 72.0f, 360.0f); // full hue cycle every 5 seconds
+    m_follower.update(dt);
+    updateCamera();
 
+    m_hue = std::fmod(m_hue + dt * 72.0f, 360.0f);
     float rgb[3];
     hsvToRgb(m_hue, 0.7f, 0.35f, rgb);
     const float clearColor[4] = { rgb[0], rgb[1], rgb[2], 1.0f };
@@ -47,6 +53,29 @@ void RenderLoop::resize(UINT width, UINT height)
 void RenderLoop::shutdown()
 {
     m_device.shutdown();
+}
+
+void RenderLoop::updateCamera()
+{
+    // Current position on path.
+    const world::PathSample curr = m_path.sample(m_follower.t());
+
+    // Lookahead position for aim direction.
+    const float lookArc = m_follower.arc() + k_lookaheadArc;
+    const world::PathSample look = m_path.sample(m_follower.arcToT(lookArc));
+
+    // Camera sits k_cameraHeightOffset above the path point.
+    m_camera.position = {
+        curr.position.x,
+        curr.position.y + k_cameraHeightOffset,
+        curr.position.z
+    };
+
+    // Forward vector aims from camera position toward the lookahead position.
+    const XMVECTOR eye  = XMLoadFloat3(&m_camera.position);
+    const XMVECTOR tgt  = XMLoadFloat3(&look.position);
+    const XMVECTOR fwd  = XMVector3Normalize(XMVectorSubtract(tgt, eye));
+    XMStoreFloat3(&m_camera.forward, fwd);
 }
 
 } // namespace engine
