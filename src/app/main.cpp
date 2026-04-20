@@ -1,4 +1,6 @@
 #include <Windows.h>
+#include "util/log.h"
+#include "util/hr.h"
 
 static constexpr int k_width  = 1280;
 static constexpr int k_height = 720;
@@ -48,6 +50,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 
     ShowWindow(hwnd, nCmdShow);
     UpdateWindow(hwnd);
+
+    LOG_INFO("boot — temerald initialised, window %dx%d", k_width, k_height);
 
     MSG msg{};
     while (msg.message != WM_QUIT)
