@@ -39,3 +39,20 @@
 
 # debug information files
 *.dwo
+
+# CMake
+build/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+_deps/
+*.cmake
+!cmake/
+CMakeUserPresets.json
+
+# Agent and IDE
+.repoql/
+.idea/
+.claude/
